@@ -1,14 +1,10 @@
+import java.io.*;
 import java.security.PublicKey;
 import java.util.concurrent.*;
 import javax.sound.sampled.SourceDataLine;
 import javax.sql.rowset.spi.SyncResolver;
 import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.io.BufferedWriter;
-import java.io.IOException;
 
 public class FoodManager {
     static int numHotdog, numBurger, numSlots, numHotdogMakers, numBurgerMakers, numHotdogPackers, numBurgerPackers;
@@ -16,6 +12,8 @@ public class FoodManager {
     static int hotdogWorkTime = 3;
     static int burgerWorkTime = 3;
     static int writeTime = 1;
+    static int packTime = 2;
+    static int takeFromQueueTime = 1;
     static volatile int hotdogIndex = 0;
     static volatile int burgerIndex = 0;
     static volatile int numHotdogPacked = 0;
@@ -100,7 +98,7 @@ public class FoodManager {
             public void run() {
                 String thread_name = Thread.currentThread().getName(); // store thread name
                 while(hotdogIndex != numHotdog){ // run until all hotdogs have been produced
-                    Food newFood; // initialise a Food Object
+                    Food newFood; // initialise Food Object
                     synchronized (hotdogLock){
                         if (hotdogIndex != numHotdog)
                             newFood = new Food('H', hotdogIndex++, thread_name); // create a hotdog
@@ -108,17 +106,28 @@ public class FoodManager {
                     }
                     gowork(hotdogWorkTime); // spend time required to make a hotdog
                     writeFile(thread_name + " puts hotdog id:" + Integer.toString(newFood.getId())); // write to logfile
-                    gowork(writeTime); // spend time to write to file
                     buffer.put(newFood);
+                    gowork(writeTime); // spend time to write to file
                 }
             }
-
         };
 
         Runnable BurgerMakerRunnable = new Runnable() {
             @Override
             public void run() {
                 String thread_name = Thread.currentThread().getName();
+                while(burgerIndex != numBurger){ // run until all burgers have been produced
+                    Food newFood; // initialise Food Object
+                    synchronized (burgerLock){
+                        if (burgerIndex != numBurger)
+                            newFood = new Food('B', burgerIndex++, thread_name); // create a hotdog
+                        else break;
+                    }
+                    gowork(burgerWorkTime); // spend time required to make a hotdog
+                    writeFile(thread_name + " puts burger id:" + Integer.toString(newFood.getId())); // write to logfile
+                    buffer.put(newFood);
+                    gowork(writeTime); // spend time to write to file
+                }
             }
         };
         Runnable HotdogPackerRunnable = new Runnable() {
@@ -131,7 +140,25 @@ public class FoodManager {
             @Override
             public void run() {
                 String thread_name = Thread.currentThread().getName();
+                boolean check = false;
+                while (numBurgerPacked != numBurger){
+                    Food newFood;
+                    synchronized (queueLock){
+                        if (numBurgerPacked != numBurger && buffer.checkType() == 'B'){
+                            newFood = buffer.get();
+                            numBurgerPacked++;
+                            gowork(takeFromQueueTime);
+                            check = true;
+                        }
+                    }
+                    if (check){
+                        gowork(packTime);
+                        writeFile(thread_name + " gets burger id:" + Integer.toString(newFood.getId()) + " from " + newFood.getMachineId());
 
+
+                    }
+
+                }
             }
         };
 
@@ -161,6 +188,14 @@ public class FoodManager {
             BurgerPackerThreads[i] = new Thread(BurgerPackerRunnable, name.concat(Integer.toString(i)));
             BurgerPackerThreads[i].start();
         }
+
+        try {
+            Thread.sleep(2000);
+            while(Thread.activeCount() != 1);
+            buffer.returnQueue();
+
+
+        } catch (InterruptedException e) { e.printStackTrace();}
     }
 }
 
