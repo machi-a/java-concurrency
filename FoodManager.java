@@ -1,4 +1,5 @@
 import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 
 public class FoodManager {
@@ -40,16 +41,14 @@ public class FoodManager {
     }
 
     // to append to a file
-    static boolean writeFile(String text) {
-        try (FileWriter f = new FileWriter(filename, true);
-             BufferedWriter b = new BufferedWriter(f);
-             PrintWriter p = new PrintWriter(b)) {
-            p.println(text);
-            return true;
-        } catch (IOException i) {
-            i.printStackTrace();
-            return false;
-        }
+    static void writeFile(String text) {
+        Path logFilePath = Paths.get(filename);
+        try {
+            // In nio, Files are opened, written into, then closed.
+            // All log entries are appended with a newline
+
+            Files.write(logFilePath, (text + "\n").getBytes(), StandardOpenOption.APPEND);
+        } catch (IOException e){ System.out.println("Failed to write log"); }
     }
 
     // to crete a file
@@ -57,7 +56,6 @@ public class FoodManager {
         try {
             File myObj = new File(text);
             if (myObj.createNewFile()) {
-                System.out.println("File created: " + myObj.getName());
                 return true;
             }
         } catch (IOException e) {
@@ -261,28 +259,29 @@ public class FoodManager {
             }
         } catch (IOException i) { i.printStackTrace();
         } catch (InterruptedException i) {i.printStackTrace();}
-        // conver hashtable to tree map in order to sort
-        TreeMap<String, Integer> test = new TreeMap<String, Integer>(summary);
-        TreeMap<String, Integer> fileParse = new TreeMap<String, Integer>(readCheck);
-        System.out.println(test.equals(fileParse));
 
-        Set<String> keys = test.keySet();
-        Iterator<String> itr = keys.iterator();
-        while (itr.hasNext()){ // iterate through the tree map
-            String s = itr.next();
-            if (s.charAt(1) == 'p'){
-                writeFile(s + " packs " + test.get(s)); // record packers contribution
-                if (s.charAt(0) == 'h'){ recordedPackedHotdogs += test.get(s); }
-                else if (s.charAt(0) == 'b'){ recordedPackedBurgers += test.get(s);}
-            } else if (s.charAt(1) == 'm'){
-                writeFile(s + " makes " + test.get(s)); // record makers contribution
-                if (s.charAt(0) == 'b'){recordedMadeBurgers +=test.get(s);}
-                else if (s.charAt(0) == 'h'){recordedMadeHotdogs +=test.get(s);}
-            }
-        }
-        writeFile("------------");
+        // Treemap of hashtable of internal records
+        TreeMap<String, Integer> test = new TreeMap<String, Integer>(summary);
+//        Set<String> keys = test.keySet();
+//        Iterator<String> itr = keys.iterator();
+//        while (itr.hasNext()){ // iterate through the tree map
+//            String s = itr.next();
+//            if (s.charAt(1) == 'p'){
+//                writeFile(s + " packs " + test.get(s)); // record packers contribution
+//                if (s.charAt(0) == 'h'){ recordedPackedHotdogs += test.get(s); }
+//                else if (s.charAt(0) == 'b'){ recordedPackedBurgers += test.get(s);}
+//            } else if (s.charAt(1) == 'm'){
+//                writeFile(s + " makes " + test.get(s)); // record makers contribution
+//                if (s.charAt(0) == 'b'){recordedMadeBurgers +=test.get(s);}
+//                else if (s.charAt(0) == 'h'){recordedMadeHotdogs +=test.get(s);}
+//            }
+//        }
+
+        // Treemap of hastable from parsing logfile
+        TreeMap<String, Integer> fileParse = new TreeMap<String, Integer>(readCheck);
         Set<String> keyss = fileParse.keySet();
         Iterator<String> itrs = keyss.iterator();
+        writeFile("summary:");
         while (itrs.hasNext()){ // iterate through the tree map
             String s = itrs.next();
             if (s.charAt(1) == 'p'){
@@ -296,8 +295,10 @@ public class FoodManager {
             }
         }
 
+        System.out.println("Internal records matches logfile: " + (fileParse.keySet().equals(test.keySet()) && fileParse.values().equals(fileParse.values())));
 
-        // check if parameters provided matches those produced and packed
+
+        // to check if parameters provided matches those produced and packed
 //        System.out.println(recordedMadeBurgers + " burgers made, test case passed: " + (recordedMadeBurgers == numBurger) );
 //        System.out.println(recordedMadeHotdogs + " hotdogs made, test case passed: " + (recordedMadeHotdogs == numHotdog));
 //        System.out.println(recordedPackedHotdogs + " hotdogs packed, test case passed: " + (recordedPackedHotdogs == numHotdog));
