@@ -24,7 +24,7 @@ public class FoodManager {
 
     static void gowork(int n_seconds) {
          try {
-             Thread.sleep(100);
+             Thread.sleep(1);
          } catch (InterruptedException ex) {
              Thread.currentThread().interrupt();
          }
@@ -92,6 +92,8 @@ public class FoodManager {
         cleanUpFiles(filename); // delete any old logfile
         createFile(filename); // create logfile
         Hashtable<String, Integer> summary = new Hashtable<String, Integer>(); // create summary table
+        Hashtable<String, Integer> readCheck = new Hashtable<String, Integer>(); // create summary table
+
 
         // create runnables for each type of thread
 
@@ -220,6 +222,7 @@ public class FoodManager {
             String name = "hm";
             HotdogMakerThreads[i] = new Thread(HotdogMakerRunnable, name.concat(Integer.toString(i)));
             summary.put(name.concat(Integer.toString(i)), 0);
+            readCheck.put(name.concat(Integer.toString(i)), 0);
             HotdogMakerThreads[i].start();
         }
         Thread[] BurgerMakerThreads = new Thread[numBurgerMakers];
@@ -227,6 +230,7 @@ public class FoodManager {
             String name = "bm";
             BurgerMakerThreads[i] = new Thread(BurgerMakerRunnable, name.concat(Integer.toString(i)));
             summary.put(name.concat(Integer.toString(i)), 0);
+            readCheck.put(name.concat(Integer.toString(i)), 0);
             BurgerMakerThreads[i].start();
         }
         Thread[] HotdogPackerThreads = new Thread[numHotdogPackers];
@@ -234,6 +238,7 @@ public class FoodManager {
             String name = "hp";
             HotdogPackerThreads[i] = new Thread(HotdogPackerRunnable, name.concat(Integer.toString(i)));
             summary.put(name.concat(Integer.toString(i)), 0);
+            readCheck.put(name.concat(Integer.toString(i)), 0);
             HotdogPackerThreads[i].start();
         }
         Thread[] BurgerPackerThreads = new Thread[numBurgerPackers];
@@ -241,36 +246,67 @@ public class FoodManager {
             String name = "bp";
             BurgerPackerThreads[i] = new Thread(BurgerPackerRunnable, name.concat(Integer.toString(i)));
             summary.put(name.concat(Integer.toString(i)), 0);
+            readCheck.put(name.concat(Integer.toString(i)), 0);
             BurgerPackerThreads[i].start();
         }
 
         try {
             Thread.sleep(2000); // delay for all threads to start running
             while(Thread.activeCount() != 1); // wait until all threads except for main have ceased
-
-            // conver hashtable to tree map in order to sort
-            TreeMap<String, Integer> test = new TreeMap<String, Integer>(summary);
-            Set<String> keys = test.keySet();
-            Iterator<String> itr = keys.iterator();
-            while (itr.hasNext()){ // iterate through the tree map
-                String s = itr.next();
-                if (s.charAt(1) == 'p'){
-                    writeFile(s + " packs " + test.get(s)); // record packers contribution
-                    if (s.charAt(0) == 'h'){ recordedPackedHotdogs += test.get(s); }
-                    else if (s.charAt(0) == 'b'){ recordedPackedBurgers += test.get(s);}
-                } else if (s.charAt(1) == 'm'){
-                    writeFile(s + " makes " + test.get(s)); // record makers contribution
-                    if (s.charAt(0) == 'b'){recordedMadeBurgers +=test.get(s);}
-                    else if (s.charAt(0) == 'h'){recordedMadeHotdogs +=test.get(s);}
-                }
+            BufferedReader br = new BufferedReader(new FileReader(filename));
+            String line;
+            while ((line = br.readLine()) != null) {
+                String threadname = line.contains(" ") ? line.split(" ")[0] : line;
+                readCheck.replace(threadname, summary.get(threadname) + 1);
             }
-        } catch (InterruptedException e) { e.printStackTrace();}
+        } catch (IOException i) { i.printStackTrace();
+        } catch (InterruptedException i) {i.printStackTrace();}
+        // conver hashtable to tree map in order to sort
+        TreeMap<String, Integer> test = new TreeMap<String, Integer>(summary);
+        TreeMap<String, Integer> fileParse = new TreeMap<String, Integer>(readCheck);
+        System.out.println(test.equals(fileParse));
+
+        Set<String> keys = test.keySet();
+        Iterator<String> itr = keys.iterator();
+        while (itr.hasNext()){ // iterate through the tree map
+            String s = itr.next();
+            if (s.charAt(1) == 'p'){
+                writeFile(s + " packs " + test.get(s)); // record packers contribution
+                if (s.charAt(0) == 'h'){ recordedPackedHotdogs += test.get(s); }
+                else if (s.charAt(0) == 'b'){ recordedPackedBurgers += test.get(s);}
+            } else if (s.charAt(1) == 'm'){
+                writeFile(s + " makes " + test.get(s)); // record makers contribution
+                if (s.charAt(0) == 'b'){recordedMadeBurgers +=test.get(s);}
+                else if (s.charAt(0) == 'h'){recordedMadeHotdogs +=test.get(s);}
+            }
+        }
+        writeFile("------------");
+        Set<String> keyss = fileParse.keySet();
+        Iterator<String> itrs = keyss.iterator();
+        while (itrs.hasNext()){ // iterate through the tree map
+            String s = itrs.next();
+            if (s.charAt(1) == 'p'){
+                writeFile(s + " packs " + test.get(s)); // record packers contribution
+                if (s.charAt(0) == 'h'){ recordedPackedHotdogs += test.get(s); }
+                else if (s.charAt(0) == 'b'){ recordedPackedBurgers += test.get(s);}
+            } else if (s.charAt(1) == 'm'){
+                writeFile(s + " makes " + test.get(s)); // record makers contribution
+                if (s.charAt(0) == 'b'){recordedMadeBurgers +=test.get(s);}
+                else if (s.charAt(0) == 'h'){recordedMadeHotdogs +=test.get(s);}
+            }
+        }
+
 
         // check if parameters provided matches those produced and packed
-        System.out.println(recordedMadeBurgers + " burgers made, test case passed: " + (recordedMadeBurgers == numBurger) );
-        System.out.println(recordedMadeHotdogs + " hotdogs made, test case passed: " + (recordedMadeHotdogs == numHotdog));
-        System.out.println(recordedPackedHotdogs + " hotdogs packed, test case passed: " + (recordedPackedHotdogs == numHotdog));
-        System.out.println(recordedPackedBurgers + " burgers packed, test case passed: " + (recordedPackedBurgers == numBurger));
+//        System.out.println(recordedMadeBurgers + " burgers made, test case passed: " + (recordedMadeBurgers == numBurger) );
+//        System.out.println(recordedMadeHotdogs + " hotdogs made, test case passed: " + (recordedMadeHotdogs == numHotdog));
+//        System.out.println(recordedPackedHotdogs + " hotdogs packed, test case passed: " + (recordedPackedHotdogs == numHotdog));
+//        System.out.println(recordedPackedBurgers + " burgers packed, test case passed: " + (recordedPackedBurgers == numBurger));
+//
+//        System.out.println("Number of bm:" + (numBurger*2+numBurgerMakers) );
+//        System.out.println("Number of hm:" + (numHotdog*2+numHotdogMakers) );
+//        System.out.println("Number of bp:" + (numBurger+numBurgerPackers) );
+//        System.out.println("Number of hp:" + (numHotdog/2+numHotdogPackers) );
 
 
     }

@@ -1,55 +1,38 @@
-bm1 puts burger id:1
 bm0 puts burger id:0
-hm2 puts hotdog id:2
-hm4 puts hotdog id:4
-hm3 puts hotdog id:3
-bm2 puts burger id:2
-hm0 puts hotdog id:0
-bm3 puts burger id:3
-bm4 puts burger id:4
 hm1 puts hotdog id:1
-hm3 puts hotdog id:6
-bm1 puts burger id:6
-bm0 puts burger id:7
-hm2 puts hotdog id:5
-bm3 puts burger id:8
-bm4 puts burger id:5
-hm1 puts hotdog id:9
-hm0 puts hotdog id:7
-bm2 puts burger id:9
-hm4 puts hotdog id:8
-bp0 gets burger id:1 from bm1
-bp4 gets burger id:2 from bm2
-bp2 gets burger id:4 from bm4
-bp3 gets burger id:0 from bm0
-bp1 gets burger id:3 from bm3
-hp2 gets hotdog id:4 from hm4 and id: 2 from hm2
-hp0 gets hotdog id:0 from hm0 and id: 6 from hm3
-hp3 gets hotdog id:1 from hm1 and id: 5 from hm2
-hp4 gets hotdog id:3 from hm3 and id: 8 from hm4
-bp3 gets burger id:8 from bm3
-bp2 gets burger id:9 from bm2
-bp0 gets burger id:5 from bm4
-hp1 gets hotdog id:7 from hm0 and id: 9 from hm1
-bp3 gets burger id:7 from bm0
-bp0 gets burger id:6 from bm1
-bm0 makes 2
-bm1 makes 2
-bm2 makes 2
-bm3 makes 2
-bm4 makes 2
-bp0 packs 3
-bp1 packs 1
-bp2 packs 2
-bp3 packs 3
-bp4 packs 1
-hm0 makes 2
+hm0 puts hotdog id:0
+bm1 puts burger id:1
+bm1 puts burger id:2
+bm0 puts burger id:3
+hm0 puts hotdog id:2
+hm1 puts hotdog id:3
+bm1 puts burger id:4
+bp1 gets burger id:1 from bm1
+bp0 gets burger id:0 from bm0
+hm0 puts hotdog id:4
+bp1 gets burger id:2 from bm1
+bm0 puts burger id:5
+hp1 gets hotdog id:0 from hm0 and id: 1 from hm1
+hm0 puts hotdog id:5
+bp1 gets burger id:3 from bm0
+bp0 gets burger id:4 from bm1
+hp0 gets hotdog id:2 from hm0 and id: 4 from hm0
+bp1 gets burger id:5 from bm0
+hp1 gets hotdog id:3 from hm1 and id: 5 from hm0
+bm0 makes 3
+bm1 makes 3
+bp0 packs 2
+bp1 packs 4
+hm0 makes 4
 hm1 makes 2
-hm2 makes 2
-hm3 makes 2
-hm4 makes 2
 hp0 packs 2
-hp1 packs 2
-hp2 packs 2
-hp3 packs 2
-hp4 packs 2
+hp1 packs 4
+------------
+bm0 makes 3
+bm1 makes 3
+bp0 packs 2
+bp1 packs 4
+hm0 makes 4
+hm1 makes 2
+hp0 packs 2
+hp1 packs 4
