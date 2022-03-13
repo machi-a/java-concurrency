@@ -98,45 +98,40 @@ public class FoodManager {
         Runnable HotdogMakerRunnable = new Runnable() {
             @Override
             public void run() {
-                String thread_name = Thread.currentThread().getName();
-                System.out.println(thread_name + " started");
-                while(hotdogIndex != numHotdog){
-                    boolean check = false;
-                    Food newFood = new Food('H', 999, thread_name);
+                String thread_name = Thread.currentThread().getName(); // store thread name
+                while(hotdogIndex != numHotdog){ // run until all hotdogs have been produced
+                    Food newFood; // initialise a Food Object
                     synchronized (hotdogLock){
-                        if (hotdogIndex != numHotdog){
-                            newFood = new Food('H', hotdogIndex++, thread_name);
-                            System.out.println(thread_name + " puts hotdog id:" + Integer.toString(newFood.getId()));
-                        }
+                        if (hotdogIndex != numHotdog)
+                            newFood = new Food('H', hotdogIndex++, thread_name); // create a hotdog
+                        else break;
                     }
-                    gowork(hotdogWorkTime);
-                    writeFile(thread_name + " puts hotdog id:" + Integer.toString(newFood.getId()));
-                    gowork(writeTime);
-                    //buffer.put(newFood)
-                    check = false;
+                    gowork(hotdogWorkTime); // spend time required to make a hotdog
+                    writeFile(thread_name + " puts hotdog id:" + Integer.toString(newFood.getId())); // write to logfile
+                    gowork(writeTime); // spend time to write to file
+                    buffer.put(newFood);
                 }
             }
 
+        };
+
+        Runnable BurgerMakerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                String thread_name = Thread.currentThread().getName();
+            }
         };
         Runnable HotdogPackerRunnable = new Runnable() {
             @Override
             public void run() {
                 String thread_name = Thread.currentThread().getName();
-                System.out.println(thread_name + " started");
-            }
-        };
-        Runnable BurgerMakerRunnable = new Runnable() {
-            @Override
-            public void run() {
-                String thread_name = Thread.currentThread().getName();
-                System.out.println(thread_name + " started");
             }
         };
         Runnable BurgerPackerRunnable = new Runnable() {
             @Override
             public void run() {
                 String thread_name = Thread.currentThread().getName();
-                System.out.println(thread_name + " started");
+
             }
         };
 
