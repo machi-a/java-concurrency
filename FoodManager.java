@@ -1,6 +1,58 @@
+import java.security.PublicKey;
+import java.util.concurrent.*;
+import javax.sound.sampled.SourceDataLine;
+import javax.sql.rowset.spi.SyncResolver;
+import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.io.BufferedWriter;
+import java.io.IOException;
+
 public class FoodManager {
     static int numHotdog, numBurger, numSlots, numHotdogMakers, numBurgerMakers, numHotdogPackers, numBurgerPackers;
 
+    static void gowork(int n_seconds) {
+        // try {
+        //     Thread.sleep(1000);
+        // } catch (InterruptedException ex) {
+        //     Thread.currentThread().interrupt();
+        // }
+        for (int i = 0; i < n_seconds; i++) {
+            long n = 300000000;
+            while (n > 0) { n--; }
+        }
+    }
+
+    static void cleanUpFiles(String text) {
+        File targetFile = new File(text);
+        targetFile.delete();
+    }
+    static boolean writeFile(String text) {
+        try (FileWriter f = new FileWriter("logfile.txt", true);
+             BufferedWriter b = new BufferedWriter(f);
+             PrintWriter p = new PrintWriter(b);) {
+            p.println(text);
+            return true;
+        } catch (IOException i) {
+            i.printStackTrace();
+            return false;
+        }
+    }
+    static boolean createFile(String text) {
+        try {
+            File myObj = new File(text);
+            if (myObj.createNewFile()) {
+                System.out.println("File created: " + myObj.getName());
+                return true;
+            }
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+        return false;
+    }
     public static void main(String[] args) {
         
         // store parameters
@@ -62,14 +114,9 @@ class Food {
         this.id = id;
         this.machineId = machineId;
     }
+    public int getId() { return id; }
 
-    public int getId() {
-        return id;
-    }
-
-    public char getType() {
-        return type;
-    }
+    public char getType() { return type; }
 
     public String getMachineId() {
         return machineId;
