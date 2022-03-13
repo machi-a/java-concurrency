@@ -107,7 +107,7 @@ public class FoodManager {
                     gowork(hotdogWorkTime); // spend time required to make a hotdog
                     writeFile(thread_name + " puts hotdog id:" + Integer.toString(newFood.getId())); // write to logfile
                     buffer.put(newFood);
-                    gowork(writeTime); // spend time to write to file
+                    gowork(writeTime); // spend time to send to queue
                 }
             }
         };
@@ -120,13 +120,13 @@ public class FoodManager {
                     Food newFood; // initialise Food Object
                     synchronized (burgerLock){
                         if (burgerIndex != numBurger)
-                            newFood = new Food('B', burgerIndex++, thread_name); // create a hotdog
+                            newFood = new Food('B', burgerIndex++, thread_name); // create a burger
                         else break;
                     }
-                    gowork(burgerWorkTime); // spend time required to make a hotdog
+                    gowork(burgerWorkTime); // spend time required to make a burger
                     writeFile(thread_name + " puts burger id:" + Integer.toString(newFood.getId())); // write to logfile
                     buffer.put(newFood);
-                    gowork(writeTime); // spend time to write to file
+                    gowork(writeTime); // spend time to send to queue
                 }
             }
         };
@@ -134,6 +134,27 @@ public class FoodManager {
             @Override
             public void run() {
                 String thread_name = Thread.currentThread().getName();
+                boolean check = false;
+                while (numHotdogPacked != numHotdog){
+                    Food newFood = new Food();
+                    if (buffer.checkType() == 'H'){
+                        synchronized (  queueLock){
+                            if (numHotdogPacked != numHotdog && buffer.checkType() == 'H'){
+                                newFood = buffer.get(); // take from queue
+                                numHotdogPacked++;
+                                System.out.println("hp" + numHotdogPacked);
+                                gowork(writeTime); // time to taken to take from queue
+                                check = true;
+                            }
+                        } 
+                    }              
+                    if (check){
+                        gowork(packTime); // time to take to pack
+                        writeFile(thread_name + " gets hotdog id:" + Integer.toString(newFood.getId()) + " from " + newFood.getMachineId()); // write to file
+                        check = false;
+                    }
+
+                }
             }
         };
         Runnable BurgerPackerRunnable = new Runnable() {
@@ -142,20 +163,23 @@ public class FoodManager {
                 String thread_name = Thread.currentThread().getName();
                 boolean check = false;
                 while (numBurgerPacked != numBurger){
-                    Food newFood;
-                    synchronized (queueLock){
-                        if (numBurgerPacked != numBurger && buffer.checkType() == 'B'){
-                            newFood = buffer.get();
-                            numBurgerPacked++;
-                            gowork(takeFromQueueTime);
-                            check = true;
+                    Food newFood = new Food();
+                    if (buffer.checkType() == 'B'){
+                        synchronized (queueLock){
+                            if (numBurgerPacked != numBurger && buffer.checkType() == 'B'){
+                                newFood = buffer.get(); // take from queue
+                                numBurgerPacked++;
+                                System.out.println("bp" + numBurgerPacked);
+                                gowork(writeTime); // time to taken to take from queue
+                                check = true;
+                            }
                         }
                     }
+                    
                     if (check){
-                        gowork(packTime);
-                        writeFile(thread_name + " gets burger id:" + Integer.toString(newFood.getId()) + " from " + newFood.getMachineId());
-
-
+                        gowork(packTime); // time to take to pack
+                        writeFile(thread_name + " gets burger id:" + Integer.toString(newFood.getId()) + " from " + newFood.getMachineId()); // write to file
+                        check = false;
                     }
 
                 }
@@ -203,7 +227,7 @@ class Food {
     char type; // either 'H' or 'B' (hotdog or burger) 
     int id; // unqiue for each type
     String machineId; // machine that produced it
-
+    public Food(){};
     public Food(char type, int id, String machineId) {
         this.type = type;
         this.id = id;
