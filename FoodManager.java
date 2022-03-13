@@ -21,6 +21,34 @@ public class FoodManager {
         System.out.println("hotdog packers: " + numHotdogPackers);
         System.out.println("burger packers: " + numBurgerPackers);
         
+        Buffer buffer = new Buffer(numSlots);
+
+
+        // initialise threads
+        Thread[] HotdogMakerThreads = new Thread[numHotdogMakers];
+        for (int i = 0; i < HotdogMakerThreads.length; i++) {
+            String name = "hm";
+            HotdogMakerThreads[i] = new Thread(HotdogMakerRunnable, name.concat(Integer.toString(i)));
+            HotdogMakerThreads[i].start();
+        }
+        Thread[] BurgerMakerThreads = new Thread[numBurgerMakers];
+        for (int i = 0; i < BurgerMakerThreads.length; i++) {
+            String name = "bm";
+            BurgerMakerThreads[i] = new Thread(BurgerMakerRunnable, name.concat(Integer.toString(i)));
+            BurgerMakerThreads[i].start();
+        }
+        Thread[] HotdogPackerThreads = new Thread[numHotdogPackers];
+        for (int i = 0; i < HotdogPackerThreads.length; i++) {
+            String name = "hp";
+            HotdogPackerThreads[i] = new Thread(HotdogPackerRunnable, name.concat(Integer.toString(i)));
+            HotdogPackerThreads[i].start();
+        }
+        Thread[] BurgerPackerThreads = new Thread[numBurgerPackers];
+        for (int i = 0; i < BurgerPackerThreads.length; i++) {
+            String name = "bp";
+            BurgerPackerThreads[i] = new Thread(BurgerPackerRunnable, name.concat(Integer.toString(i)));
+            BurgerPackerThreads[i].start();
+        }
     }
 }
 
