@@ -75,6 +75,38 @@ public class FoodManager {
         
         Buffer buffer = new Buffer(numSlots);
 
+        // create runnables for each type of thread
+
+        Runnable HotdogMakerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                String thread_name = Thread.currentThread().getName();
+                System.out.println(thread_name + " started");
+            }
+
+        };
+        Runnable HotdogPackerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                String thread_name = Thread.currentThread().getName();
+                System.out.println(thread_name + " started");
+            }
+        };
+        Runnable BurgerMakerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                String thread_name = Thread.currentThread().getName();
+                System.out.println(thread_name + " started");
+            }
+        };
+        Runnable BurgerPackerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                String thread_name = Thread.currentThread().getName();
+                System.out.println(thread_name + " started");
+            }
+        };
+
 
         // initialise threads
         Thread[] HotdogMakerThreads = new Thread[numHotdogMakers];
