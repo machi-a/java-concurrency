@@ -1,16 +1,35 @@
-bm2 puts burger id:2
-hm0 puts hotdog id:0
-bm0 puts burger id:0
 hm1 puts hotdog id:1
-hm2 puts hotdog id:2
-hm3 puts hotdog id:3
+bm2 puts burger id:2
+bm2 puts burger id:5
+bm2 puts burger id:6
+bm2 puts burger id:7
+bm2 puts burger id:8
+bm2 puts burger id:9
 bm3 puts burger id:3
+bm0 puts burger id:0
+bm4 puts burger id:4
+hm2 puts hotdog id:2
+hm2 puts hotdog id:5
 bm1 puts burger id:1
-hp0 gets hotdog id:1 from hm1
-bp1 gets burger id:0 from bm0
-bp2 gets burger id:1 from bm1
-bp4 gets burger id:3 from bm3
-hp3 gets hotdog id:3 from hm3
-bp0 gets burger id:2 from bm2
-hp4 gets hotdog id:0 from hm0
-hp1 gets hotdog id:2 from hm2
+hm3 puts hotdog id:3
+hm4 puts hotdog id:4
+hm0 puts hotdog id:0
+hm0 puts hotdog id:6
+hm0 puts hotdog id:7
+hm2 puts hotdog id:8
+hm4 puts hotdog id:9
+bp3 gets burger id:8 from bm2
+bp0 gets burger id:5 from bm2
+bp1 gets burger id:7 from bm2
+bp3 gets burger id:9 from bm2
+bp2 gets burger id:2 from bm2
+bp3 gets burger id:3 from bm3
+bp4 gets burger id:6 from bm2
+bp3 gets burger id:4 from bm4
+bp2 gets burger id:0 from bm0
+bp1 gets burger id:1 from bm1
+hp3 gets hotdog id:3 from hm3 and id: 9 from hm4
+hp2 gets hotdog id:4 from hm4 and id: 7 from hm0
+hp0 gets hotdog id:1 from hm1 and id: 5 from hm2
+hp1 gets hotdog id:2 from hm2 and id: 6 from hm0
+hp4 gets hotdog id:0 from hm0 and id: 8 from hm2

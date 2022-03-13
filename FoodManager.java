@@ -18,9 +18,7 @@ public class FoodManager {
     static volatile int burgerIndex = 0;
     static volatile int numHotdogPacked = 0;
     static volatile int numBurgerPacked = 0;
-    static volatile boolean queueInUse = false;
     static volatile boolean createHotdog = false;
-    static volatile boolean createBurger = false;
     static Object queueLock = new Object();
     static Object burgerLock = new Object();
     static Object hotdogLock = new Object();
@@ -137,24 +135,44 @@ public class FoodManager {
             @Override
             public void run() {
                 String thread_name = Thread.currentThread().getName();
+                Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+                int hotdogsContained = 0;
+                Food[] store = new Food[2];
                 boolean check = false;
                 while (numHotdogPacked != numHotdog){
                     Food newFood = new Food();
                     if (buffer.checkType() == 'H'){
                         synchronized (  queueLock){
                             if (numHotdogPacked != numHotdog && buffer.checkType() == 'H'){
-                                newFood = buffer.get(); // take from queue
-                                numHotdogPacked++;
-                                System.out.println("hp" + numHotdogPacked);
-                                gowork(writeTime); // time to taken to take from queue
-                                check = true;
+                                if (hotdogsContained == 0){
+                                    store[0] = buffer.get(); // take from queue
+                                    numHotdogPacked++;
+                                    System.out.println("hp" + numHotdogPacked);
+                                    gowork(writeTime); // time to taken to take from queue
+                                    check = true;
+                                    Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+                                    hotdogsContained += 1;
+                                } else if (hotdogsContained == 1){
+                                    store[1] = buffer.get(); // take from queue
+                                    numHotdogPacked++;
+                                    System.out.println("hp" + numHotdogPacked);
+                                    gowork(writeTime); // time to taken to take from queue
+                                    check = true;
+                                    Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+                                    hotdogsContained += 1;
+                                }
+
                             }
                         } 
                     }              
                     if (check){
-                        gowork(packTime); // time to take to pack
-                        writeFile(thread_name + " gets hotdog id:" + Integer.toString(newFood.getId()) + " from " + newFood.getMachineId()); // write to file
                         summary.replace(thread_name, summary.get(thread_name) + 1);
+
+                        if (hotdogsContained == 2){
+                            hotdogsContained = 0;
+                            writeFile(thread_name + " gets hotdog id:" + Integer.toString(store[0].getId()) + " from " + store[0].getMachineId() + " and id: " + Integer.toString(store[1].getId()) + " from " + store[1].getMachineId()); // write to file
+                            gowork(packTime); // time to take to pack
+                        }
                         check = false;
                     }
 
