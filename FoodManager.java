@@ -21,6 +21,29 @@ public class FoodManager {
         System.out.println("hotdog packers: " + numHotdogPackers);
         System.out.println("burger packers: " + numBurgerPackers);
         
+    }
+}
 
+class Food {
+    char type;
+    int id;
+    String machineId;
+
+    public Food(char type, int id, String machineId) {
+        this.type = type;
+        this.id = id;
+        this.machineId = machineId;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public char getType() {
+        return type;
+    }
+
+    public String getMachineId() {
+        return machineId;
     }
 }
