@@ -25,9 +25,9 @@ public class FoodManager {
 }
 
 class Food {
-    char type;
-    int id;
-    String machineId;
+    char type; // either 'H' or 'B' (hotdog or burger) 
+    int id; // unqiue for each type
+    String machineId; // machine that produced it
 
     public Food(char type, int id, String machineId) {
         this.type = type;
