@@ -1,45 +1,41 @@
 import java.io.*;
-import java.security.PublicKey;
 import java.util.*;
-import java.util.concurrent.*;
-import javax.sound.sampled.SourceDataLine;
-import javax.sql.rowset.spi.SyncResolver;
-import java.util.concurrent.TimeUnit;
 
 public class FoodManager {
     static int numHotdog, numBurger, numSlots, numHotdogMakers, numBurgerMakers, numHotdogPackers, numBurgerPackers;
     static String filename = "logfile.txt";
-    static int hotdogWorkTime = 3;
-    static int burgerWorkTime = 3;
-    static int writeTime = 1;
-    static int packTime = 2;
-    static int takeFromQueueTime = 1;
-    static volatile int hotdogIndex = 0;
-    static volatile int burgerIndex = 0;
-    static volatile int numHotdogPacked = 0;
-    static volatile int numBurgerPacked = 0;
-    static volatile boolean createHotdog = false;
+    static int hotdogWorkTime = 3; // time taken to produce a hotdog
+    static int burgerWorkTime = 3; // time taken to produce a burger
+    static int writeTime = 1; // time taken to send or retrieve food items from queue
+    static int packTime = 2; // time taken to pack
+    static volatile int hotdogIndex = 0; // number of hotdog produced
+    static volatile int burgerIndex = 0; // number of burgers produced
+    static volatile int numHotdogPacked = 0; // number of hotdog packed
+    static volatile int numBurgerPacked = 0; // number of burgers packed
+    static volatile int numHotdogsTaken = 0;
+
     static Object queueLock = new Object();
     static Object burgerLock = new Object();
     static Object hotdogLock = new Object();
 
     static void gowork(int n_seconds) {
-//         try {
-//             Thread.sleep(1000);
-//         } catch (InterruptedException ex) {
-//             Thread.currentThread().interrupt();
-//         }
-        for (int i = 0; i < n_seconds; i++) {
-            long n = 300000000;
-            while (n > 0) { n--; }
-        }
+         try {
+             Thread.sleep(100);
+         } catch (InterruptedException ex) {
+             Thread.currentThread().interrupt();
+         }
+//        for (int i = 0; i < n_seconds; i++) {
+//            long n = 300000000;
+//            while (n > 0) { n--; }
+//        }
     }
-
+    // to delete files
     static void cleanUpFiles(String text) {
         File targetFile = new File(text);
         targetFile.delete();
     }
 
+    // to append to a file
     static boolean writeFile(String text) {
         try (FileWriter f = new FileWriter(filename, true);
              BufferedWriter b = new BufferedWriter(f);
@@ -51,6 +47,8 @@ public class FoodManager {
             return false;
         }
     }
+
+    // to crete a file
     static boolean createFile(String text) {
         try {
             File myObj = new File(text);
@@ -64,6 +62,7 @@ public class FoodManager {
         }
         return false;
     }
+
     public static void main(String[] args) {
         
         // store parameters
@@ -85,10 +84,10 @@ public class FoodManager {
         System.out.println("burger packers: " + numBurgerPackers);
 
         // initialise neccessary variables
-        Buffer buffer = new Buffer(numSlots);
-        cleanUpFiles(filename);
-        createFile(filename);
-        Hashtable<String, Integer> summary = new Hashtable<String, Integer>();
+        Buffer buffer = new Buffer(numSlots); // create buffer
+        cleanUpFiles(filename); // delete any old logfile
+        createFile(filename); // create logfile
+        Hashtable<String, Integer> summary = new Hashtable<String, Integer>(); // create summary table
 
         // create runnables for each type of thread
 
@@ -99,15 +98,15 @@ public class FoodManager {
                 while(hotdogIndex != numHotdog){ // run until all hotdogs have been produced
                     Food newFood; // initialise Food Object
                     synchronized (hotdogLock){
-                        if (hotdogIndex != numHotdog)
+                        if (hotdogIndex != numHotdog) // second check if there are still hotdogs not produced
                             newFood = new Food('H', hotdogIndex++, thread_name); // create a hotdog
-                        else break;
+                        else break; // if there are not more hotdogs to produce, the thread can end
                     }
-                    gowork(hotdogWorkTime); // spend time required to make a hotdog
+                    gowork(hotdogWorkTime); // spend time to make a hotdog
                     writeFile(thread_name + " puts hotdog id:" + Integer.toString(newFood.getId())); // write to logfile
-                    buffer.put(newFood);
+                    buffer.put(newFood); // add hotdog to queue
                     gowork(writeTime); // spend time to send to queue
-                    summary.replace(thread_name, summary.get(thread_name) + 1);
+                    summary.replace(thread_name, summary.get(thread_name) + 1); // record the production by this machine
                 }
             }
         };
@@ -119,15 +118,15 @@ public class FoodManager {
                 while(burgerIndex != numBurger){ // run until all burgers have been produced
                     Food newFood; // initialise Food Object
                     synchronized (burgerLock){
-                        if (burgerIndex != numBurger)
+                        if (burgerIndex != numBurger) // second check if there are still burgers to produce
                             newFood = new Food('B', burgerIndex++, thread_name); // create a burger
-                        else break;
+                        else break; // if there are not more burgers to produce, the thread can end
                     }
                     gowork(burgerWorkTime); // spend time required to make a burger
                     writeFile(thread_name + " puts burger id:" + Integer.toString(newFood.getId())); // write to logfile
-                    buffer.put(newFood);
+                    buffer.put(newFood); // add burger to queue
                     gowork(writeTime); // spend time to send to queue
-                    summary.replace(thread_name, summary.get(thread_name) + 1);
+                    summary.replace(thread_name, summary.get(thread_name) + 1); // record the production by this machine
                 }
             }
         };
@@ -135,7 +134,7 @@ public class FoodManager {
             @Override
             public void run() {
                 String thread_name = Thread.currentThread().getName();
-                Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+                Thread.currentThread().setPriority(Thread.MIN_PRIORITY); // set default priority of thread to lowest
                 int hotdogsContained = 0;
                 Food[] store = new Food[2];
                 boolean check = false;
@@ -144,34 +143,40 @@ public class FoodManager {
                     if (buffer.checkType() == 'H'){
                         synchronized (  queueLock){
                             if (numHotdogPacked != numHotdog && buffer.checkType() == 'H'){
-                                if (hotdogsContained == 0){
-                                    store[0] = buffer.get(); // take from queue
-                                    numHotdogPacked++;
-                                    System.out.println("hp" + numHotdogPacked);
-                                    gowork(writeTime); // time to taken to take from queue
-                                    check = true;
-                                    Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-                                    hotdogsContained += 1;
-                                } else if (hotdogsContained == 1){
-                                    store[1] = buffer.get(); // take from queue
-                                    numHotdogPacked++;
-                                    System.out.println("hp" + numHotdogPacked);
-                                    gowork(writeTime); // time to taken to take from queue
-                                    check = true;
-                                    Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
-                                    hotdogsContained += 1;
-                                }
+                                    if (hotdogsContained == 0) {
+                                        if (numHotdogsTaken < hotdogIndex - numHotdogPacked) {
+                                            System.out.println("hd taken =" + numHotdogsTaken + "hotdogs left =" + (hotdogIndex - numHotdogPacked));
+                                            store[0] = buffer.get(); // take from queue
+                                            numHotdogPacked++;
+                                            gowork(writeTime); // time to taken to take from queue
+                                            check = true;
+                                            Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+                                            hotdogsContained += 1;
+                                            numHotdogsTaken += 1;
+                                            System.out.println(thread_name + " gets hotdog id:" + Integer.toString(store[0].getId()) + " from " + store[0].getMachineId());
+                                        }
+                                    } else if (hotdogsContained == 1) {
+                                        System.out.println("hd taken =" + numHotdogsTaken + "hotdogs left =" + (hotdogIndex - numHotdogPacked));
+                                        store[1] = buffer.get(); // take from queue
+                                        numHotdogPacked++;
+                                        gowork(writeTime); // time to taken to take from queue
+                                        check = true;
+                                        Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+                                        hotdogsContained += 1;
+                                        numHotdogsTaken += 1;
+                                        System.out.println(thread_name + " gets hotdog id:" + Integer.toString(store[1].getId()) + " from " + store[1].getMachineId());
+                                    }
 
                             }
                         } 
                     }              
                     if (check){
-                        summary.replace(thread_name, summary.get(thread_name) + 1);
-
                         if (hotdogsContained == 2){
+                            summary.replace(thread_name, summary.get(thread_name) + 2);
                             hotdogsContained = 0;
                             writeFile(thread_name + " gets hotdog id:" + Integer.toString(store[0].getId()) + " from " + store[0].getMachineId() + " and id: " + Integer.toString(store[1].getId()) + " from " + store[1].getMachineId()); // write to file
                             gowork(packTime); // time to take to pack
+                            numHotdogsTaken -= 2;
                         }
                         check = false;
                     }
@@ -191,7 +196,6 @@ public class FoodManager {
                             if (numBurgerPacked != numBurger && buffer.checkType() == 'B'){
                                 newFood = buffer.get(); // take from queue
                                 numBurgerPacked++;
-                                System.out.println("bp" + numBurgerPacked);
                                 gowork(writeTime); // time to taken to take from queue
                                 summary.replace(thread_name, summary.get(thread_name) + 1);
                                 check = true;
@@ -251,9 +255,9 @@ public class FoodManager {
             while (itr.hasNext()){
                 String s = itr.next();
                 if (s.charAt(1) == 'p'){
-                    System.out.println(s + " packs " + test.get(s));
+                    writeFile(s + " packs " + test.get(s));
                 } else if (s.charAt(1) == 'm'){
-                    System.out.println(s + " makes " + test.get(s));
+                    writeFile(s + " makes " + test.get(s));
                 }
             }
 
