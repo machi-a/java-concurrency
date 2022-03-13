@@ -12,13 +12,27 @@ import java.io.IOException;
 
 public class FoodManager {
     static int numHotdog, numBurger, numSlots, numHotdogMakers, numBurgerMakers, numHotdogPackers, numBurgerPackers;
+    static String filename = "logfile.txt";
+    static int hotdogWorkTime = 3;
+    static int burgerWorkTime = 3;
+    static int writeTime = 1;
+    static volatile int hotdogIndex = 0;
+    static volatile int burgerIndex = 0;
+    static volatile int numHotdogPacked = 0;
+    static volatile int numBurgerPacked = 0;
+    static volatile boolean queueInUse = false;
+    static volatile boolean createHotdog = false;
+    static volatile boolean createBurger = false;
+    static Object queueLock = new Object();
+    static Object burgerLock = new Object();
+    static Object hotdogLock = new Object();
 
     static void gowork(int n_seconds) {
-        // try {
-        //     Thread.sleep(1000);
-        // } catch (InterruptedException ex) {
-        //     Thread.currentThread().interrupt();
-        // }
+//         try {
+//             Thread.sleep(1000);
+//         } catch (InterruptedException ex) {
+//             Thread.currentThread().interrupt();
+//         }
         for (int i = 0; i < n_seconds; i++) {
             long n = 300000000;
             while (n > 0) { n--; }
@@ -29,10 +43,11 @@ public class FoodManager {
         File targetFile = new File(text);
         targetFile.delete();
     }
+
     static boolean writeFile(String text) {
-        try (FileWriter f = new FileWriter("logfile.txt", true);
+        try (FileWriter f = new FileWriter(filename, true);
              BufferedWriter b = new BufferedWriter(f);
-             PrintWriter p = new PrintWriter(b);) {
+             PrintWriter p = new PrintWriter(b)) {
             p.println(text);
             return true;
         } catch (IOException i) {
@@ -72,8 +87,11 @@ public class FoodManager {
         System.out.println("burger makers: " + numBurgerMakers);
         System.out.println("hotdog packers: " + numHotdogPackers);
         System.out.println("burger packers: " + numBurgerPackers);
-        
+
+        // initialise neccessary variables
         Buffer buffer = new Buffer(numSlots);
+        cleanUpFiles(filename);
+        createFile(filename);
 
         // create runnables for each type of thread
 
@@ -82,6 +100,21 @@ public class FoodManager {
             public void run() {
                 String thread_name = Thread.currentThread().getName();
                 System.out.println(thread_name + " started");
+                while(hotdogIndex != numHotdog){
+                    boolean check = false;
+                    Food newFood = new Food('H', 999, thread_name);
+                    synchronized (hotdogLock){
+                        if (hotdogIndex != numHotdog){
+                            newFood = new Food('H', hotdogIndex++, thread_name);
+                            System.out.println(thread_name + " puts hotdog id:" + Integer.toString(newFood.getId()));
+                        }
+                    }
+                    gowork(hotdogWorkTime);
+                    writeFile(thread_name + " puts hotdog id:" + Integer.toString(newFood.getId()));
+                    gowork(writeTime);
+                    //buffer.put(newFood)
+                    check = false;
+                }
             }
 
         };
@@ -157,7 +190,7 @@ class Food {
 
 class Buffer {
 
-    private Food[] buffer;
+    private final Food[] buffer;
     private int front = 0, back = 0;
     public int item_count = 0;
 
@@ -211,7 +244,6 @@ class Buffer {
 
     public void returnQueue() {
         String result = "";
-
         for (int i = 0; i < item_count; i++) {
             result = result + buffer[i].getType() + buffer[i].getId() + " ";
         }
